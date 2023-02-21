@@ -19,7 +19,7 @@ class Register extends  React.Component {
         this.setState({ password: event.target.value })
     }
     onSubmitSignIn = () => {
-        fetch('https://face-recognition-backend-r8nm.onrender.com/register',{
+        fetch('https://face-recognition-backend-r8nm.onrender.com/Register',{
             method: 'post',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
