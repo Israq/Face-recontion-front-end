@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import * as faceapi from "@vladmandic/face-api";
 import Navigation from "./Components/Navigation/Navigation";
 import SignIn from "./Components/SignIn/SignIn";
 import Register from "./Components/Register/Register";
@@ -62,6 +63,24 @@ class App extends Component {
     this.state = initialState;
   }
 
+  componentDidMount() {
+    this.loadModels();
+  }
+
+  loadModels = async () => {
+    try {
+      await faceapi.nets.tinyFaceDetector.loadFromUri(
+        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model",
+      );
+      await faceapi.nets.faceLandmark68Net.loadFromUri(
+        "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model",
+      );
+      console.log("Face detection models loaded");
+    } catch (err) {
+      console.log("Model loading error:", err);
+    }
+  };
+
   loadUser = (data) => {
     this.setState({
       user: {
@@ -79,13 +98,48 @@ class App extends Component {
   };
 
   onButtonSubmit = () => {
-    this.setState({ imageUrl: this.state.input });
+    const proxiedUrl = `http://localhost:3001/proxy-image?url=${encodeURIComponent(this.state.input)}`;
+    this.setState({ imageUrl: proxiedUrl });
 
     const img = new Image();
-    img.src = this.state.input;
     img.crossOrigin = "anonymous";
-    img.onload = () => {
-      // Update entries count
+    img.src = proxiedUrl;
+    img.onload = async () => {
+      const imageElement = document.getElementById("inputimage");
+      if (!imageElement) return;
+
+      await new Promise((resolve) => {
+        if (imageElement.complete && imageElement.naturalWidth > 0) resolve();
+        else imageElement.onload = resolve;
+      });
+
+      try {
+        const detections = await faceapi
+          .detectAllFaces(imageElement, new faceapi.TinyFaceDetectorOptions())
+          .withFaceLandmarks();
+
+        if (detections.length > 0) {
+          const face = detections[0].detection.box;
+          const displayWidth = Number(imageElement.width);
+          const displayHeight = Number(imageElement.height);
+          const naturalWidth = imageElement.naturalWidth;
+          const naturalHeight = imageElement.naturalHeight;
+
+          const scaleX = displayWidth / naturalWidth;
+          const scaleY = displayHeight / naturalHeight;
+
+          const box = {
+            leftCol: face.x * scaleX,
+            topRow: face.y * scaleY,
+            rightCol: displayWidth - (face.x + face.width) * scaleX,
+            bottomRow: displayHeight - (face.y + face.height) * scaleY,
+          };
+          this.setState({ box: box });
+        }
+      } catch (err) {
+        console.log("Face detection error:", err);
+      }
+
       fetch("http://localhost:3001/image", {
         method: "put",
         headers: { "Content-Type": "application/json" },
@@ -96,20 +150,9 @@ class App extends Component {
           this.setState(Object.assign(this.state.user, { entries: count }));
         })
         .catch((err) => console.log("Entry update error:", err));
-
-      // Draw a fixed box as placeholder (FaceDetector not available)
-      const image = document.getElementById("inputimage");
-      const width = Number(image.width);
-      const height = Number(image.height);
-      const box = {
-        leftCol: width * 0.2,
-        topRow: height * 0.2,
-        rightCol: width * 0.2,
-        bottomRow: height * 0.2,
-      };
-      this.setState({ box: box });
     };
   };
+
   onRouteChange = (route) => {
     if (route === "SignOut") {
       this.setState(initialState);
