@@ -1,70 +1,121 @@
-# Getting Started with Create React App
+# Face Recognition App (Frontend)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+AI-powered face detection running entirely in the browser. No API keys, no external AI services, no costs. Built with React and face-api.js.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Features
 
-### `npm start`
+- **In-Browser AI** — Face detection via face-api.js (TensorFlow.js)
+- **Multi-Face Detection** — Detects multiple faces with confidence scores
+- **JWT Authentication** — Persistent login across sessions
+- **Smart Entry Counting** — One count per unique image
+- **Demo Mode** — Pre-loaded image for instant testing
+- **Error Handling** — Messages for invalid URLs, no faces, failed loads
+- **Docker + Nginx** — Production-ready containerized deployment
+- **Responsive UI** — Tachyons CSS framework
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Tech Stack
 
-### `npm test`
+| Category  | Technology                  |
+| --------- | --------------------------- |
+| Framework | React (Class Components)    |
+| AI/ML     | face-api.js (TensorFlow.js) |
+| Styling   | Tachyons CSS                |
+| Auth      | JWT (localStorage)          |
+| Server    | nginx (Docker)              |
+| Container | Docker + Docker Compose     |
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Quick Start
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Docker (Recommended)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+docker-compose up -d
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Open [http://localhost:3000](http://localhost:3000)
 
-### `npm run eject`
+### Manual
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```bash
+git clone https://github.com/Israq/Face-recontion-front-end.git
+cd Face-recontion-front-end
+npm install
+npm start
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+---
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+## How It Works
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+1. **Register/Login** — JWT token stored in browser
+2. **Paste Image URL** — Any royalty-free image link
+3. **Click Detect** — Models load from CDN, detect faces, draw boxes with confidence
+4. **Entry Count** — Increments once per unique image
+5. **Try Demo** — Click button to test instantly
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Project Structure
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+src/
+├── Components/
+│   ├── FaceRecognition/   # Face bounding box overlay
+│   ├── ImageLinkForm/     # URL input + Detect + Demo buttons
+│   ├── Navigation/        # Sign in/out navigation
+│   ├── Rank/              # Entry count display
+│   ├── Register/          # Registration form
+│   ├── SignIn/            # Login form
+│   └── Logo/              # App logo
+├── App.js                 # Main component (face detection logic)
+└── App.css                # Custom styles
+```
 
-### Code Splitting
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Face Detection Models
 
-### Analyzing the Bundle Size
+Models load automatically from CDN on first use:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- **Tiny Face Detector** — Fast, lightweight
+- **Face Landmark 68** — Accurate bounding boxes
 
-### Making a Progressive Web App
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Deployment (Render)
 
-### Advanced Configuration
+| Config            | Value           |
+| ----------------- | --------------- |
+| Type              | Static Site     |
+| Build Command     | `npm run build` |
+| Publish Directory | `build`         |
+| Node Version      | 22              |
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+---
 
-### Deployment
+## Troubleshooting
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+| Issue                 | Solution                                           |
+| --------------------- | -------------------------------------------------- |
+| No face detected      | Try a different image; check console for errors    |
+| CORS errors           | Backend proxy handles external image URLs          |
+| Token expired         | Auto-redirects to login on next refresh            |
+| Models not loading    | CDN may be slow; loads from jsdelivr automatically |
+| Blank page on refresh | Shows loading screen while verifying JWT           |
+| Invalid URL error     | App shows red error message with guidance          |
 
-### `npm run build` fails to minify
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+## Author
+
+**Syed Ragib Israq**
+
+- [GitHub](https://github.com/Israq)
+- [LinkedIn](https://www.linkedin.com/in/syed-ragib-israq-profile/)
+- [Portfolio](https://israq-portfolio.onrender.com/)
