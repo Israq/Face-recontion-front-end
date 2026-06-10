@@ -122,7 +122,7 @@ class App extends Component {
       console.log("Face detection error:", err);
     }
 
-    fetch("http://localhost:3001/image", {
+    fetch("https://face-recognition-backend-r8nm.onrender.com/image", {
       method: "put",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: this.state.user.id }),
