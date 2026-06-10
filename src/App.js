@@ -44,8 +44,12 @@ const particlesOptions = {
 const initialState = {
   input: "",
   imageUrl: "",
-  box: {},
+  error: "",
+  boxes: [],
+  processedImages: [],
+  loading: false,
   route: "SignIn",
+  isLoading: true,
   isSignedIn: false,
   user: {
     id: "",
@@ -65,6 +69,28 @@ class App extends Component {
 
   componentDidMount() {
     this.loadModels();
+
+    const token = localStorage.getItem("token");
+    if (token) {
+      fetch("https://face-recognition-backend-r8nm.onrender.com/verify-token", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((user) => {
+          if (user.id) {
+            this.loadUser(user);
+            this.setState({
+              isSignedIn: true,
+              route: "home",
+              isLoading: false,
+            });
+          }
+        })
+        .catch(() => localStorage.removeItem("token"));
+      this.setState({ isLoading: false });
+    } else {
+      this.setState({ isLoading: false });
+    }
   }
 
   loadModels = async () => {
@@ -82,6 +108,7 @@ class App extends Component {
   };
 
   loadUser = (data) => {
+    if (data.token) localStorage.setItem("token", data.token);
     this.setState({
       user: {
         id: data.id,
@@ -98,12 +125,26 @@ class App extends Component {
   };
 
   onButtonSubmit = () => {
-    const proxiedUrl = `http://localhost:3001/proxy-image?url=${encodeURIComponent(this.state.input)}`;
+    this.setState({ loading: true, boxes: [], error: "" });
+    const imageUrl = this.state.input;
+
+    if (!imageUrl) {
+      this.setState({ loading: false, error: "Please enter an image URL" });
+      return;
+    }
+
+    const proxiedUrl = `https://face-recognition-backend-r8nm.onrender.com/proxy-image?url=${encodeURIComponent(imageUrl)}`;
     this.setState({ imageUrl: proxiedUrl });
 
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = proxiedUrl;
+    img.onerror = () => {
+      this.setState({
+        loading: false,
+        error: "Failed to load image. Check the URL and try again.",
+      });
+    };
     img.onload = async () => {
       const imageElement = document.getElementById("inputimage");
       if (!imageElement) return;
@@ -119,7 +160,6 @@ class App extends Component {
           .withFaceLandmarks();
 
         if (detections.length > 0) {
-          const face = detections[0].detection.box;
           const displayWidth = Number(imageElement.width);
           const displayHeight = Number(imageElement.height);
           const naturalWidth = imageElement.naturalWidth;
@@ -128,33 +168,54 @@ class App extends Component {
           const scaleX = displayWidth / naturalWidth;
           const scaleY = displayHeight / naturalHeight;
 
-          const box = {
-            leftCol: face.x * scaleX,
-            topRow: face.y * scaleY,
-            rightCol: displayWidth - (face.x + face.width) * scaleX,
-            bottomRow: displayHeight - (face.y + face.height) * scaleY,
-          };
-          this.setState({ box: box });
+          const boxes = detections.map((det, i) => {
+            const face = det.detection.box;
+            return {
+              id: i,
+              leftCol: face.x * scaleX,
+              topRow: face.y * scaleY,
+              rightCol: displayWidth - (face.x + face.width) * scaleX,
+              bottomRow: displayHeight - (face.y + face.height) * scaleY,
+              confidence: Math.round(det.detection.score * 100),
+            };
+          });
+          this.setState({ boxes: boxes, error: "" });
+        } else {
+          this.setState({
+            error: "No faces detected in this image. Try another photo.",
+          });
         }
+        this.setState({ loading: false });
       } catch (err) {
         console.log("Face detection error:", err);
+        this.setState({
+          loading: false,
+          error: "Face detection failed. Please try again.",
+        });
       }
 
-      fetch("http://localhost:3001/image", {
-        method: "put",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: this.state.user.id }),
-      })
-        .then((response) => response.json())
-        .then((count) => {
-          this.setState(Object.assign(this.state.user, { entries: count }));
+      if (!this.state.processedImages.includes(imageUrl)) {
+        this.setState({
+          processedImages: [...this.state.processedImages, imageUrl],
+        });
+
+        fetch("https://face-recognition-backend-r8nm.onrender.com/image", {
+          method: "put",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: this.state.user.id }),
         })
-        .catch((err) => console.log("Entry update error:", err));
+          .then((response) => response.json())
+          .then((count) => {
+            this.setState(Object.assign(this.state.user, { entries: count }));
+          })
+          .catch((err) => console.log("Entry update error:", err));
+      }
     };
   };
 
   onRouteChange = (route) => {
     if (route === "SignOut") {
+      localStorage.removeItem("token");
       this.setState(initialState);
     } else if (route === "home") {
       this.setState({ isSignedIn: true });
@@ -163,7 +224,14 @@ class App extends Component {
   };
 
   render() {
-    const { isSignedIn, imageUrl, route, box } = this.state;
+    const { isSignedIn, imageUrl, route, boxes, loading, isLoading, error } =
+      this.state;
+    if (isLoading)
+      return (
+        <div className="vh-100 flex items-center justify-center">
+          <h1 className="f1 light-purple">Loading...</h1>
+        </div>
+      );
     return (
       <div className="App">
         <ParticlesBg type="cobweb" config={particlesOptions} bg={true} />
@@ -182,7 +250,8 @@ class App extends Component {
               onInputChange={this.onInputChange}
               onButtonSubmit={this.onButtonSubmit}
             />
-            <FaceRecognition box={box} imageUrl={imageUrl} />
+            {error && <p className="f3 black mt3">{error}</p>}
+            <FaceRecognition boxes={boxes} imageUrl={imageUrl} />
           </div>
         ) : route === "SignIn" ? (
           <SignIn loadUser={this.loadUser} onRouteChange={this.onRouteChange} />
