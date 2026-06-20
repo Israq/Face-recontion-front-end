@@ -216,7 +216,7 @@ class App extends Component {
   onRouteChange = (route) => {
     if (route === "SignOut") {
       localStorage.removeItem("token");
-      this.setState(initialState);
+      this.setState({ ...initialState, isLoading: false });
     } else if (route === "home") {
       this.setState({ isSignedIn: true });
     }

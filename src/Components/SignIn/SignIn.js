@@ -29,7 +29,7 @@ class SignIn extends React.Component {
     })
       .then((response) => response.json())
       .then((user) => {
-        if (user.id) {
+        if (user && user.id) {
           this.props.loadUser(user);
           this.props.onRouteChange("home");
         } else {
@@ -40,6 +40,39 @@ class SignIn extends React.Component {
         this.setState({ error: "Unable to connect. Please try again." });
       });
   };
+
+  onGuestSignIn = () => {
+    this.setState(
+      {
+        signInEmail: "guest@demo.com",
+        signInPassword: "guest123",
+        error: "",
+      },
+      () => {
+        fetch("https://face-recognition-backend-r8nm.onrender.com/signin", {
+          method: "post",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: "guest@demo.com",
+            password: "guest123",
+          }),
+        })
+          .then((response) => response.json())
+          .then((user) => {
+            if (user && user.id) {
+              this.props.loadUser(user);
+              this.props.onRouteChange("home");
+            } else {
+              this.setState({ error: "Guest account unavailable" });
+            }
+          })
+          .catch(() => {
+            this.setState({ error: "Unable to connect. Please try again." });
+          });
+      },
+    );
+  };
+
   render() {
     const { onRouteChange } = this.props;
     return (
@@ -62,6 +95,7 @@ class SignIn extends React.Component {
                   type="email"
                   name="email-address"
                   id="email-address"
+                  value={this.state.signInEmail}
                   onChange={this.onEmailChange}
                 />
               </div>
@@ -74,6 +108,7 @@ class SignIn extends React.Component {
                   type="password"
                   name="password"
                   id="password"
+                  value={this.state.signInPassword}
                   onChange={this.onPasswordChange}
                 />
               </div>
@@ -86,7 +121,15 @@ class SignIn extends React.Component {
                 value="Sign in"
               />
             </div>
-            <div className="lh-copy mt3">
+            <div className="lh-copy mt2">
+              <p
+                onClick={this.onGuestSignIn}
+                className="f6 link dim gray db pointer tc"
+              >
+                Try as Guest
+              </p>
+            </div>
+            <div className="lh-copy mt1">
               <p
                 onClick={() => onRouteChange("register")}
                 className="f6 link dim black db pointer"
