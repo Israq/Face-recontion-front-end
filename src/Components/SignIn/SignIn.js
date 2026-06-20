@@ -125,7 +125,7 @@ class SignIn extends React.Component {
               <input
                 onClick={this.onGuestSignIn}
                 className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
-                type="button"
+                type="submit"
                 value="Try as Guest"
               />
             </div>
