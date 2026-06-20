@@ -226,6 +226,9 @@ class App extends Component {
   render() {
     const { isSignedIn, imageUrl, route, boxes, loading, isLoading, error } =
       this.state;
+    const isMobile =
+      /Android|iPhone|iPad|iPod|webOS/i.test(navigator.userAgent) ||
+      window.innerWidth < 1024;
     if (isLoading)
       return (
         <div className="vh-100 flex items-center justify-center">
@@ -234,7 +237,9 @@ class App extends Component {
       );
     return (
       <div className="App">
-        <ParticlesBg type="cobweb" config={particlesOptions} bg={true} />
+        {!isMobile && (
+          <ParticlesBg type="cobweb" config={particlesOptions} bg={true} />
+        )}
         <Navigation
           isSignedIn={isSignedIn}
           onRoutechange={this.onRouteChange}
