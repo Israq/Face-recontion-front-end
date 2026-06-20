@@ -122,12 +122,12 @@ class SignIn extends React.Component {
               />
             </div>
             <div className="lh-copy mt2">
-              <p
+              <input
                 onClick={this.onGuestSignIn}
-                className="f6 link dim gray db pointer tc"
-              >
-                Try as Guest
-              </p>
+                className="b ph3 pv2 input-reset ba b--black bg-transparent grow pointer f6 dib"
+                type="button"
+                value="Try as Guest"
+              />
             </div>
             <div className="lh-copy mt1">
               <p
